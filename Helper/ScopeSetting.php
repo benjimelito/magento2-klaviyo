@@ -5,6 +5,7 @@ class ScopeSetting extends \Magento\Framework\App\Helper\AbstractHelper
 {
     const MODULE_NAME = 'Klaviyo_Reclaim';
     const ENABLE = 'klaviyo_reclaim_general/general/enable';
+    const WEBHOOK = 'klaviyo_reclaim_general/general/webhook';
     const PUBLIC_API_KEY = 'klaviyo_reclaim_general/general/public_api_key';
     const PRIVATE_API_KEY = 'klaviyo_reclaim_general/general/private_api_key';
     const CUSTOM_MEDIA_URL = 'klaviyo_reclaim_general/general/custom_media_url';
@@ -124,6 +125,11 @@ class ScopeSetting extends \Magento\Framework\App\Helper\AbstractHelper
     public function isEnabled()
     {
         return $this->getScopeSetting(self::ENABLE);
+    }
+
+    public function isWebhookEnabled()
+    {
+        return $this->getScopeSetting(self::WEBHOOK);
     }
 
     public function getPublicApiKey()
