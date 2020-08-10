@@ -10,6 +10,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const USER_AGENT = 'Klaviyo/1.0';
     const KLAVIYO_HOST = 'https://a.klaviyo.com/';
     const LIST_V2_API = 'api/v2/list/';
+    const PLACED_ORDER = 'Placed Order Webhook';
+    const REFUND_ORDER = 'Refunded Order Webhook';
 
     /**
      * Klaviyo logger helper
@@ -130,6 +132,33 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return $response;
     }
 
+
+    /**
+     * @param string $order
+     * @return bool|string
+     */
+    public function sendOrderToKlaviyo($order)
+    {
+        $payload = $this->map_payload_object($order);
+        return $this->klaviyoTrackEvent(self::PLACED_ORDER, $payload['customer_properties'], $payload['properties'], time());
+
+    }
+
+     /**
+     * @param string $order
+     * @return bool|string
+     */
+    public function sendRefundToKlaviyo($order)
+    {
+        $payload = $this->map_payload_object($order);
+        // Check if there is a way to grab the comment of refund.
+        $payload['properties']['Reason'] = 'Not Needed';
+        return $this->klaviyoTrackEvent(self::REFUND_ORDER, $payload['customer_properties'], $payload['properties'], time());
+
+    }
+
+
+
     public function klaviyoTrackEvent($event, $customer_properties=array(), $properties=array(), $timestamp=NULL)
     {
         if ((!array_key_exists('$email', $customer_properties) || empty($customer_properties['$email']))
@@ -159,6 +188,75 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $url = self::KLAVIYO_HOST . $path . '?' . $params;
         $response = file_get_contents($url);
         return $response == '1';
+    }
+
+    /**
+     * Helper function that takes the order object and returns a mapped out array
+     * @return array
+     */
+    private function map_payload_object($order)
+    {
+        $customer_properties = [];
+        $properties = [];
+        $items = [];
+
+        $shipping = $order->getShippingAddress();
+        $billing = $order->getBillingAddress();
+
+        foreach ($order->getAllVisibleItems() as $item) {
+                $items[] = [
+                    'ProductId' => $item->getProductId(),
+                    'SKU' => $item->getSku(),
+                    'ProductName' => $item->getName(),
+                    'Quanitity' => (int)$item->getQtyOrdered(),
+                    'ItemPrice' => (float)$item->getPrice()
+                ];
+            }
+
+        if ($order->getCustomerEmail()) $customer_properties['$email'] = $order->getCustomerEmail();
+        if ($order->getCustomerName()) $customer_properties['$first_name'] = $order->getCustomerFirstName();
+        if ($order->getCustomerLastname()) $customer_properties['$last_name'] = $order->getCustomerLastname();
+
+        if ($shipping->getTelephone()) $customer_properties['$phone_number'] = $shipping->getTelephone();
+        if ($shipping->getCity()) $customer_properties['$city'] = $shipping->getCity();
+        if ($shipping->getStreet()) $customer_properties['$address1'] = $shipping->getStreet();
+        if ($shipping->getPostcode()) $customer_properties['$zip'] = $shipping->getPostcode();
+        if ($shipping->getRegion()) $customer_properties['$region'] = $shipping->getRegion();
+        if ($shipping->getCountryId()) $customer_properties['$country'] = $shipping->getCountryId();
+
+        if ($order->getGrandTotal()) $properties['$value'] = (float)$order->getGrandTotal();
+        if ($order->getQuoteId()) $properties['$event_id'] = $order->getQuoteId();
+        if ($order->getDiscountAmount()) $properties['Discount Value'] = (float)$order->getDiscountAmount();
+        if ($order->getCouponCode()) $properties['Discount Code'] = $order->getCouponCode();
+
+        $properties['BillingAddress'] = $this->map_address($billing);
+        $properties['ShippingAddress'] = $this->map_address($shipping);
+        $properties['Items'] = $items;
+
+        return ['customer_properties' => $customer_properties, 'properties' => $properties];
+
+    }
+
+    /**
+     * Helper function that takes the address_type object and returns a mapped out array
+     * @return array
+     */
+    private function map_address($address_type)
+    {
+        $address = [];
+        if ($address_type->getFirstname()) $address['FirstName'] = $address_type->getFirstname();
+        if ($address_type->getLastname()) $address['LastName'] = $address_type->getLastname();
+        if ($address_type->getCompany()) $address['Company'] = $address_type->getCompany();
+        if ($address_type->getStreet()) $address['Address1'] = $address_type->getStreet();
+        if ($address_type->getCity()) $address['City'] = $address_type->getCity() ;
+        if ($address_type->getRegion()) $address['Region'] = $address_type->getRegion();
+        if ($address_type->getRegionCode()) $address['RegionCode'] = $address_type->getRegionCode();
+        if ($address_type->getCountryId()) $address['CountryCode'] = $address_type->getCountryId();
+        if ($address_type->getPostCode()) $address['Zip'] = $address_type->getPostCode();
+        if ($address_type->getTelephone()) $address['Phone'] = $address_type->getTelephone();
+
+        return $address;
+
     }
 
     /**

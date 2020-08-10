@@ -1,0 +1,8 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../../lib/internal/Magento/Framework/App/etc/events.xsd">
+    <event name="sales_order_save_after">
+        <observer name="klaviyo_reclaim" instance="Klaviyo\Reclaim\Observer\PlacedOrderObserver"  />
+    </event>
+    <event name="sales_order_payment_refund">
+        <observer name="klaviyo_reclaim" instance="Klaviyo\Reclaim\Observer\RefundOrderObserver"  />
+    </event>
+</config>
