@@ -139,7 +139,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function sendOrderToKlaviyo($order)
     {
-        $payload = $this->map_payload_object($order);
+        $payload = $this->mapPayloadObject($order);
         return $this->klaviyoTrackEvent(self::PLACED_ORDER, $payload['customer_properties'], $payload['properties'], time());
 
     }
@@ -150,7 +150,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function sendRefundToKlaviyo($order)
     {
-        $payload = $this->map_payload_object($order);
+        $payload = $this->mapPayloadObject($order);
         // Check if there is a way to grab the comment of refund.
         $payload['properties']['Reason'] = 'Not Needed';
         return $this->klaviyoTrackEvent(self::REFUND_ORDER, $payload['customer_properties'], $payload['properties'], time());
@@ -194,7 +194,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * Helper function that takes the order object and returns a mapped out array
      * @return array
      */
-    private function map_payload_object($order)
+    private function mapPayloadObject($order)
     {
         $customer_properties = [];
         $properties = [];
@@ -229,8 +229,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($order->getDiscountAmount()) $properties['Discount Value'] = (float)$order->getDiscountAmount();
         if ($order->getCouponCode()) $properties['Discount Code'] = $order->getCouponCode();
 
-        $properties['BillingAddress'] = $this->map_address($billing);
-        $properties['ShippingAddress'] = $this->map_address($shipping);
+        $properties['BillingAddress'] = $this->mapAddress($billing);
+        $properties['ShippingAddress'] = $this->mapAddress($shipping);
         $properties['Items'] = $items;
 
         return ['customer_properties' => $customer_properties, 'properties' => $properties];
@@ -241,7 +241,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * Helper function that takes the address_type object and returns a mapped out array
      * @return array
      */
-    private function map_address($address_type)
+    private function mapAddress($address_type)
     {
         $address = [];
         if ($address_type->getFirstname()) $address['FirstName'] = $address_type->getFirstname();
