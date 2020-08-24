@@ -10,6 +10,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const USER_AGENT = 'Klaviyo/1.0';
     const KLAVIYO_HOST = 'https://a.klaviyo.com/';
     const LIST_V2_API = 'api/v2/list/';
+    const REFUND_REASON = 'Refunded';
     const PLACED_ORDER = 'Placed Order Webhook';
     const REFUND_ORDER = 'Refunded Order Webhook';
 
@@ -132,7 +133,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return $response;
     }
 
-
     /**
      * @param string $order
      * @return bool|string
@@ -151,13 +151,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function sendRefundToKlaviyo($order)
     {
         $payload = $this->mapPayloadObject($order);
-        // Check if there is a way to grab the comment of refund.
-        $payload['properties']['Reason'] = 'Not Needed';
+        $payload['properties']['Reason'] = self::REFUND_REASON;
         return $this->klaviyoTrackEvent(self::REFUND_ORDER, $payload['customer_properties'], $payload['properties'], time());
 
     }
-
-
 
     public function klaviyoTrackEvent($event, $customer_properties=array(), $properties=array(), $timestamp=NULL)
     {
@@ -205,11 +202,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         foreach ($order->getAllVisibleItems() as $item) {
                 $items[] = [
-                    'ProductId' => $item->getProductId(),
-                    'SKU' => $item->getSku(),
-                    'ProductName' => $item->getName(),
-                    'Quanitity' => (int)$item->getQtyOrdered(),
-                    'ItemPrice' => (float)$item->getPrice()
+                    'ProductId' => $item->getProductId() ? $item->getProductId() : '',
+                    'SKU' => $item->getSku() ? $item->getSku() : '',
+                    'ProductName' => $item->getName() ? $item->getName() : '',
+                    'Quanitity' => $item->getQtyOrdered() ? (int)$item->getQtyOrdered() : '',
+                    'ItemPrice' => $item->getPrice() ? (float)$item->getPrice() : ''
                 ];
             }
 
@@ -234,7 +231,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $properties['Items'] = $items;
 
         return ['customer_properties' => $customer_properties, 'properties' => $properties];
-
     }
 
     /**
@@ -256,7 +252,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($address_type->getTelephone()) $address['Phone'] = $address_type->getTelephone();
 
         return $address;
-
     }
 
     /**
