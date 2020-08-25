@@ -141,7 +141,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $payload = $this->mapPayloadObject($order);
         return $this->klaviyoTrackEvent(self::PLACED_ORDER, $payload['customer_properties'], $payload['properties'], time());
-
     }
 
      /**
@@ -153,7 +152,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $payload = $this->mapPayloadObject($order);
         $payload['properties']['Reason'] = self::REFUND_REASON;
         return $this->klaviyoTrackEvent(self::REFUND_ORDER, $payload['customer_properties'], $payload['properties'], time());
-
     }
 
     public function klaviyoTrackEvent($event, $customer_properties=array(), $properties=array(), $timestamp=NULL)
@@ -175,8 +173,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
         $encoded_params = $this->build_params($params);
         return $this->make_request('api/track', $encoded_params);
-
     }
+
     protected function build_params($params) {
         return 'data=' . urlencode(base64_encode(json_encode($params)));
     }
