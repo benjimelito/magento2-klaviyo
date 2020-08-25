@@ -6,7 +6,6 @@ use Magento\Framework\Event\Observer;
 
 class PlacedOrderObserver implements ObserverInterface
 {
-
     protected $_dataHelper;
     protected $_klaviyoScopeSetting;
 
@@ -21,6 +20,7 @@ class PlacedOrderObserver implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         if (!$this->_klaviyoScopeSetting->isEnabled() || !$this->_klaviyoScopeSetting->isWebhookEnabled()) return;
+
         $this->_dataHelper->sendOrderToKlaviyo(
             $observer->getEvent()->getOrder()
         );
